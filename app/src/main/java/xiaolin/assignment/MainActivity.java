@@ -6,6 +6,7 @@ import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +23,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -107,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button mBtclear;
     private Button mBtchoise;
     private boolean ok = false;
-
+    private AlertDialog alertDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -115,11 +117,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         initView();
         createFloder();
-        AlertDialog dialog = new AlertDialog.Builder(this)
+
+        alertDialog = new AlertDialog.Builder(this)
                 .setPositiveButton("我知道了", null)
                 .setMessage("请确保文件管理器根目录中有名为‘工作簿.xlsx’文件或手动选择文件。分班完成后文件将保存到根目录的分班文件夹中")
                 .create();
-        dialog.show();
+        alertDialog.show();
     }
 
     private void createFloder() {
@@ -173,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Toast.makeText(MainActivity.this, "第" + msg.arg1 + "分班文件创建失败", Toast.LENGTH_SHORT).show();
                         break;
                     case CREATESUCCESSCODE:
-                        pd2.setProgress((int) msg.arg1);
+                        pd2.setProgress(msg.arg1);
                         break;
                     case PARSEERROR:
                         Toast.makeText(MainActivity.this, "分班信息出错", Toast.LENGTH_SHORT).show();
@@ -188,7 +191,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         pd2.show();
                         break;
                     case HIDE_DIALOG:
-                        Toast.makeText(MainActivity.this, "所有文件生成完毕", Toast.LENGTH_SHORT).show();
+                        /*  Toast.makeText(MainActivity.this, "所有文件生成完毕", Toast.LENGTH_SHORT).show();
+                      String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/分班/filetoshare-1.xlsx";
+                        File file = new File(path);
+                        Log.i(TAG, "handleMessage: " + path);
+                        if (!file.exists()) {
+                            return;
+                        }
+                        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                        intent.addCategory(Intent.CATEGORY_DEFAULT);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        Uri uri = FileProvider.getUriForFile(MainActivity.this, "xiaolin.assignment.fileprovider", file);
+                        intent.setDataAndType(uri, "file/*");
+                        try {
+                            startActivity(intent);
+                        } catch (ActivityNotFoundException e) {
+                            e.printStackTrace();
+                        }*/
+                        alertDialog.setTitle("温馨提示");
+                        if (ok) {
+                            alertDialog.setMessage("文件已保存到根目录中的分班文件夹中，请查看");
+                        } else {
+                            alertDialog.setMessage("文件已保存到根目录中，请查看");
+                        }
+                        alertDialog.show();
                         pd2.cancel();
                         break;
                     case TIPSECOND:
@@ -571,6 +597,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             path1 = getPath(this, uri);
             mTvpath.setText(path1);
         }
+
     }
 
     private String getPath(Context context, Uri uri) {
